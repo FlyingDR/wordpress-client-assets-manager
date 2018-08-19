@@ -1,0 +1,28 @@
+{
+    "name": "flying/wordpress-client-assets-manager",
+    "description": "Implementation of client assets management for Wordpress",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Alexander Grimalovsky",
+            "email": "alexander.grimalovsky@gmail.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Flying\\Wordpress\\": "src"
+        }
+    },
+    "require": {
+        "php": "^5.6|^7.0",
+        "thomaslarsson/priorityqueue": "^1.0",
+        "matthiasmullie/path-converter": "^1.1"
+    },
+    "require-dev": {
+        "johnpbloch/wordpress-core": "^4.2"
+    },
+    "suggest": {
+        "ext-curl": "Allows better handling of Google Fonts stylesheets inclusion"
+    }
+}
