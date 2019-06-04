@@ -438,7 +438,7 @@ class ClientAssetsManager
             }
             /** @noinspection PhpParamsInspection */
             $this->styles->insert([
-                'external' => true,
+                'external' => false,
                 'url'      => $cachePath,
                 'priority' => 9999,
             ], 9999);
