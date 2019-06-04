@@ -2,7 +2,9 @@
 
 namespace Flying\Wordpress;
 
+use _WP_Dependency;
 use MatthiasMullie\PathConverter\Converter;
+use SplPriorityQueue;
 use ThomasLarsson\PriorityQueue\MinPriorityQueue;
 
 class ClientAssetsManager
@@ -68,7 +70,7 @@ class ClientAssetsManager
         }, 1);
 
         // Render footer contents
-        add_action('wp_footer', function () {
+        add_action('wp_footer', static function () {
             // Mark a place to put assets into footer of the page
             echo self::DEFERRED_FOOTER_CONTENTS_TAG;
         }, 1);
@@ -87,8 +89,7 @@ class ClientAssetsManager
     public function applyAssets($html = null)
     {
         if ($html === null && ob_get_level() > 0) {
-            $html = ob_get_contents();
-            ob_end_clean();
+            $html = ob_get_clean();
         }
         if (!$this->isEnabled()) {
             return $html;
@@ -108,7 +109,7 @@ class ClientAssetsManager
         $filterOutJQuery = function ($scripts) {
             if ($this->jqueryIncluded) {
                 // Filter out jQuery libraries that are replaced with jQuery loaded from CDN
-                $scripts = array_filter($scripts, function ($handle) {
+                $scripts = array_filter($scripts, static function ($handle) {
                     return is_admin() || !in_array($handle, ['jquery', 'jquery-core', 'jquery-migrate'], true);
                 });
             }
@@ -132,7 +133,7 @@ class ClientAssetsManager
                 if (!array_key_exists($script, $wpScripts->registered)) {
                     return true;
                 }
-                /** @var \_WP_Dependency $dependency */
+                /** @var _WP_Dependency $dependency */
                 $dependency = $wpScripts->registered[$script];
                 if (strpos($dependency->src, '://') !== false && strpos($dependency->src, $wpScripts->base_url . '/') === false) {
                     return true;
@@ -160,7 +161,7 @@ class ClientAssetsManager
             $parts = [];
             // Collect information about scripts that should be include into combined script
             foreach ($this->renderScripts as $script) {
-                /** @var \_WP_Dependency $dependency */
+                /** @var _WP_Dependency $dependency */
                 $dependency = $wpScripts->registered[$script];
                 $path = $dependency->src;
                 if (strpos($path, '://') !== false) {
@@ -197,18 +198,19 @@ class ClientAssetsManager
         // Mark it with conditional comment so it will be possible to find it later
         wp_scripts()->add_data(self::COMBINED_SCRIPT_ID, 'conditional', self::COMBINED_SCRIPT_ID);
         // Print additional scripts, registered for optimized versions of the scripts
-        add_action('wp_footer', function () {
+        add_action('wp_footer', static function () {
             // Capture output because we need to have merged scripts to be loaded after scripts localization
             ob_start();
         }, 1);
         add_action('wp_footer', function () {
             // Render all additional scripts that may be attached to scripts, e.g. localization
             foreach ($this->renderScripts as $script) {
+                /** @noinspection UnusedFunctionResultInspection */
                 wp_scripts()->print_extra_script($script);
             }
-            $html = ob_get_contents();
-            ob_end_clean();
+            $html = ob_get_clean();
             // Move our combined script at the end of the scripts area to make sure that all additional scripts will stay above it
+            /** @noinspection NotOptimalRegularExpressionsInspection */
             $parts = preg_split('/' . preg_quote('<!--[if ' . self::COMBINED_SCRIPT_ID . ']>', '/') . '(.+?)' . preg_quote('<![endif]-->', '/') . '/s', $html, -1, PREG_SPLIT_DELIM_CAPTURE);
             $before = array_shift($parts);
             $script = array_shift($parts);
@@ -260,7 +262,7 @@ class ClientAssetsManager
                 if ($path) {
                     $css = file_get_contents($path);
                     $converter = new Converter($path, $cachePath);
-                    $css = preg_replace_callback('/url\(([\'\"]?)(.+?)(\1)\)/is', function ($data) use ($converter) {
+                    $css = preg_replace_callback('/url\(([\'\"]?)(.+?)(\1)\)/is', static function ($data) use ($converter) {
                         $url = $data[2];
                         if (!preg_match('/^(data|https?):/i', $url)) {
                             $url = $converter->convert($url);
@@ -425,6 +427,7 @@ class ClientAssetsManager
                         CURLOPT_HTTPHEADER => ['User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; rv:11.0) like Gecko'],
                         CURLOPT_TIMEOUT    => 10,
                     ));
+                    /** @noinspection UnusedFunctionResultInspection */
                     curl_exec($ch);
                     curl_close($ch);
                     fclose($fp);
@@ -525,10 +528,10 @@ class ClientAssetsManager
     }
 
     /**
-     * @param \SplPriorityQueue $queue
+     * @param SplPriorityQueue $queue
      * @return string
      */
-    private function merge(\SplPriorityQueue $queue)
+    private function merge(SplPriorityQueue $queue)
     {
         $result = [];
         foreach ($queue as $item) {
