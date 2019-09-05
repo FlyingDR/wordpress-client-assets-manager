@@ -408,6 +408,7 @@ class ClientAssetsManager
                 $family[] = $ff . ':' . (is_array($fw) ? implode(',', $fw) : $fw);
             }
             $query['family'] = implode('|', $family);
+            $query['display'] = 'swap';
             if ($subset !== null) {
                 $query['subset'] = is_array($subset) ? implode(',', $subset) : $subset;
             }
