@@ -81,6 +81,18 @@ class ClientAssetsManager
             echo self::DEFERRED_FOOTER_CONTENTS_TAG;
         }, PHP_INT_MIN);
 
+        // Remove rendering of styles into footer
+        // by replacing contents of _wp_footer_scripts() in a way
+        // to remove call to print_late_styles()
+        // as it will be replaced by own styles rendering
+        remove_action('wp_print_footer_scripts', '_wp_footer_scripts');
+        add_action('wp_print_footer_scripts', 'print_footer_scripts');
+        add_action('wp_print_footer_scripts', function () {
+            ob_start();
+            print_late_styles();
+            $this->addCode(ob_get_clean(), false, 10);
+        });
+
         // Capture output so we will be able to apply assets to it later
         // @see applyAssets()
         ob_start();
