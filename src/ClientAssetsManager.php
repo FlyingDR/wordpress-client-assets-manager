@@ -73,13 +73,13 @@ class ClientAssetsManager
             // Mark a place to put assets into HEAD section of the page
             echo self::DEFERRED_HEAD_CONTENTS_TAG;
             $this->initJavaScriptOptimization();
-        }, 1);
+        }, PHP_INT_MIN);
 
         // Render footer contents
         add_action('wp_footer', static function () {
             // Mark a place to put assets into footer of the page
             echo self::DEFERRED_FOOTER_CONTENTS_TAG;
-        }, 1);
+        }, PHP_INT_MIN);
 
         // Capture output so we will be able to apply assets to it later
         // @see applyAssets()
@@ -286,7 +286,7 @@ class ClientAssetsManager
         // Include resulted combined stylesheet into list of stylesheets
         /** @noinspection PhpParamsInspection */
         $stylesheets->insert([
-            'url'      => str_replace($basePath, wp_scripts()->base_url . '/', $cachePath),
+            'url'      => str_replace($basePath, wp_styles()->base_url . '/', $cachePath),
             'priority' => 1,
         ], 1);
         foreach ($stylesheets as $item) {
@@ -473,9 +473,9 @@ class ClientAssetsManager
             $basePath = rtrim(str_replace('\\', '/', ABSPATH), '/');
             if (strpos($url, '://') !== false) {
                 // This is URL
-                if (strpos($url, wp_scripts()->base_url . '/') !== false) {
+                if (strpos($url, wp_styles()->base_url . '/') !== false) {
                     // This is local url
-                    $path = str_replace(wp_scripts()->base_url, $basePath, $url);
+                    $path = str_replace(wp_styles()->base_url, $basePath, $url);
                     if (strpos($path, '?') !== false) {
                         $path = explode('?', $path, 2)[0];
                     }
