@@ -22,6 +22,7 @@ class ClientAssetsManager
     private $styles;
     private $scripts = [];
     private $optimizeAssets = false;
+    private $assetsApplied = false;
     private $renderScripts = [];
     private $cacheDir;
 
@@ -42,6 +43,11 @@ class ClientAssetsManager
         $this->footer = new MinPriorityQueue();
         $this->styles = new MinPriorityQueue();
         $this->cacheDir = str_replace('\\', '/', WP_CONTENT_DIR) . '/assets-cache';
+        register_shutdown_function(function () {
+            if ($this->isEnabled() && !$this->assetsApplied) {
+                trigger_error('ClientAssetsManager is enabled, but assets do not get applied. Consider adding "echo ClientAssetsManager::getInstance()->applyAssets();" after page rendering', E_USER_ERROR);
+            }
+        });
         $this->init();
     }
 
@@ -101,6 +107,7 @@ class ClientAssetsManager
             [$this->merge($this->head), $this->merge($this->footer)],
             $html
         );
+        $this->assetsApplied = true;
         return $html;
     }
 
