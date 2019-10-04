@@ -322,7 +322,7 @@ class ClientAssetsManager
      */
     private function isEnabled()
     {
-        return !$this->isAjax() && !is_admin();
+        return PHP_SAPI !== 'cli' && !$this->isAjax() && !is_admin();
     }
 
     /**
