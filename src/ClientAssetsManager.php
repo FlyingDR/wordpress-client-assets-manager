@@ -327,7 +327,7 @@ class ClientAssetsManager
      * @param boolean $minified
      * @return $this
      */
-    public function addJquery($version = '2.2.4', $minified = true)
+    public function addJquery($version = '3.4.1', $minified = true)
     {
         if ($this->jqueryIncluded || !$this->isEnabled()) {
             return $this;
