@@ -312,7 +312,8 @@ class ClientAssetsManager
      */
     private function isAjax()
     {
-        return array_key_exists('HTTP_X_REQUESTED_WITH', $_SERVER) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest';
+        return (array_key_exists('HTTP_X_REQUESTED_WITH', $_SERVER) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest')
+            || (function_exists('wp_doing_ajax') && wp_doing_ajax());
     }
 
     /**
@@ -322,7 +323,12 @@ class ClientAssetsManager
      */
     private function isEnabled()
     {
-        return PHP_SAPI !== 'cli' && !$this->isAjax() && !is_admin();
+        return !(
+            (PHP_SAPI === 'cli')
+            || ($this->isAjax())
+            || (function_exists('is_protected_endpoint') && is_protected_endpoint())
+            || (function_exists('is_admin') && is_admin())
+        );
     }
 
     /**
