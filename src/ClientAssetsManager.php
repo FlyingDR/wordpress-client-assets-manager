@@ -93,6 +93,14 @@ class ClientAssetsManager
             $this->addCode(ob_get_clean(), false, 10);
         });
 
+        add_filter('wp_redirect_status', function ($status, $location) {
+            // We're in process of redirect, we have to disable manager in this case
+            if ($location) {
+                $this->assetsApplied = true;
+            }
+            return $status;
+        }, 10, 2);
+
         // Capture output so we will be able to apply assets to it later
         // @see applyAssets()
         ob_start();
