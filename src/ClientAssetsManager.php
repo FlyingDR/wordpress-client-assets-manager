@@ -225,10 +225,12 @@ class ClientAssetsManager
             ob_start();
         }, 1);
         add_action('wp_footer', function () {
-            // Render all additional scripts that may be attached to scripts, e.g. localization
+            $scripts = wp_scripts();
+            // Render all additional scripts that may be attached to scripts
+            // and need to appear before merged scripts
             foreach ($this->renderScripts as $script) {
-                /** @noinspection UnusedFunctionResultInspection */
-                wp_scripts()->print_extra_script($script);
+                $scripts->print_inline_script($script, 'before');
+                $scripts->print_extra_script($script);
             }
             $html = ob_get_clean();
             // Move our combined script at the end of the scripts area to make sure that all additional scripts will stay above it
@@ -238,7 +240,15 @@ class ClientAssetsManager
             $script = array_shift($parts);
             $after = array_shift($parts);
             /** @noinspection PhpParamsInspection */
-            $this->footer->insert(implode("\n", [$before, $after, $script]), 1);
+            $this->footer->insert(implode("\n", [$before, $after, $script]), 10);
+            ob_start();
+            // Render all additional scripts that may be attached to scripts
+            // and need to appear after merged scripts
+            foreach ($this->renderScripts as $script) {
+                $scripts->print_inline_script($script, 'after');
+            }
+            /** @noinspection PhpParamsInspection */
+            $this->footer->insert((string)ob_get_clean(), 5);
         }, 999);
     }
 
@@ -420,6 +430,7 @@ class ClientAssetsManager
      * @param string|array $font
      * @param string|array $subset
      * @return $this
+     * @noinspection PhpComposerExtensionStubsInspection
      */
     public function addFont($font, $subset = null)
     {
