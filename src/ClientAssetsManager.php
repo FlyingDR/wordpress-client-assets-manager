@@ -194,7 +194,7 @@ class ClientAssetsManager
                 } else {
                     $path = $basePath . '/' . ltrim($path, '/');
                 }
-                if (file_exists($path)) {
+                if (is_file($path)) {
                     $parts[] = $path;
                     $hash[] = implode('|', [$script, filesize($path), filemtime($path)]);
                 } else {
@@ -202,7 +202,7 @@ class ClientAssetsManager
                 }
             }
             $cachePath = $this->cacheDir . '/' . sha1(implode('|', $hash)) . '.js';
-            if (!file_exists($cachePath)) {
+            if (!is_file($cachePath)) {
                 // Combined script is not yet available - generate it and put into cache
                 $content = [];
                 foreach ($parts as $part) {
@@ -268,7 +268,7 @@ class ClientAssetsManager
             } else {
                 // This is local stylesheet, it should be merged
                 $path = $item['url'];
-                if (file_exists($path)) {
+                if (is_file($path)) {
                     $paths[] = $path;
                     $hash[] = $path;
                     $hash[] = filesize($path);
@@ -278,14 +278,14 @@ class ClientAssetsManager
         }
         $basePath = str_replace('\\', '/', ABSPATH);
         $cachePath = $this->cacheDir . '/' . sha1(implode('|', $hash)) . '.css';
-        if (!file_exists($cachePath)) {
+        if (!is_file($cachePath)) {
             // Stylesheet is not yet cached - create it and put in cache
             $content = [];
             foreach ($paths as $path) {
                 $pp = $path;
                 if (strpos($path, '://') === false) {
                     $pp = str_replace($basePath, '', $path);
-                    if (!file_exists($path)) {
+                    if (!is_file($path)) {
                         $path = null;
                         trigger_error('Client Assets Manager: Missed included stylesheet file:' . $pp, E_USER_WARNING);
                     }
@@ -442,7 +442,6 @@ class ClientAssetsManager
             $query = [];
             $family = [];
             /** @var array $font */
-            /** @noinspection ForeachSourceInspection */
             foreach ($font as $ff => $fw) {
                 $family[] = $ff . ':' . (is_array($fw) ? implode(',', $fw) : $fw);
             }
@@ -456,7 +455,7 @@ class ClientAssetsManager
         if ($this->optimizeAssets) {
             $hash = sha1($url);
             $cachePath = $this->cacheDir . '/font-' . $hash . '.css';
-            if (!file_exists($cachePath) || filemtime($cachePath) < strtotime('last sunday')) {
+            if (!is_file($cachePath) || filemtime($cachePath) < strtotime('last sunday')) {
                 if (function_exists('curl_init')) {
                     $ch = curl_init();
                     $fp = fopen($cachePath, 'wb');
@@ -535,7 +534,7 @@ class ClientAssetsManager
             if ($inline) {
                 $path = str_replace('\\', '/', $url);
                 $path = rtrim(get_template_directory(), '/') . '/' . ltrim($path, '/');
-                if (file_exists($path)) {
+                if (is_file($path)) {
                     $css = file_get_contents($path);
                     $css = preg_replace('/\s+/', ' ', $css);
                     $html = '<style type="text/css">' . trim($css) . '</style>';
