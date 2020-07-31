@@ -552,6 +552,19 @@ class ClientAssetsManager
     }
 
     /**
+     * Add plain CSS styles into list of assets
+     *
+     * @param string $code
+     * @param int $priority
+     * @return $this
+     */
+    public function addCSS($code, $priority = 100)
+    {
+        $this->addCode('<style type="text/css">' . $code . '</style>', false, $priority);
+        return $this;
+    }
+
+    /**
      * @param string $html
      * @param boolean $inFooter
      * @param int $priority
