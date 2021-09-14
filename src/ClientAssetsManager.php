@@ -371,7 +371,7 @@ class ClientAssetsManager
             return $this;
         }
         $this->jqueryIncluded = true;
-        $this->addCode('<script type="text/javascript" src="' . sprintf('//ajax.googleapis.com/ajax/libs/jquery/%s/jquery%s.js', $version, ($minified ? '.min' : '')) . '"></script>', true, 9999);
+        $this->addCode('<script type="text/javascript" src="' . sprintf('https://ajax.googleapis.com/ajax/libs/jquery/%s/jquery%s.js', $version, ($minified ? '.min' : '')) . '"></script>', true, 9999);
         // Based on code from https://gist.github.com/brunoais/4690937#file-loadingjqueryasync-original-html
         $this->addJs('(function(w,d,u){w.readyQ=[];w.bindReadyQ=[];function p(x,y){if(x=="ready"){w.bindReadyQ.push(y);}else{w.readyQ.push(x);}};var a={ready:p,bind:p};w.$=w.jQuery=function(f){if(f===d||f===u){return a}else{p(f)}}})(window,document)', false);
         $this->addJs('(function($,d){$.each(readyQ,function(i,f){$(f)});$.each(bindReadyQ,function(i,f){$(d).bind("ready",f)})})(jQuery,document)');
