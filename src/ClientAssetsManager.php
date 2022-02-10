@@ -186,6 +186,9 @@ class ClientAssetsManager
                 /** @var _WP_Dependency $dependency */
                 $dependency = $wpScripts->registered[$script];
                 $path = $dependency->src;
+                if ($path === false) {
+                    continue;
+                }
                 if (strpos($path, '://') !== false) {
                     $path = str_replace($wpScripts->base_url, $basePath, $path);
                     if (strpos($path, '?') !== false) {
