@@ -17,6 +17,7 @@ class ClientAssetsManager
      */
     private static $instance;
     private $jqueryIncluded = false;
+    private $removeJquery = false;
     private $head;
     private $footer;
     private $styles;
@@ -129,10 +130,10 @@ class ClientAssetsManager
     private function initJavaScriptOptimization()
     {
         $filterOutJQuery = function ($scripts) {
-            if ($this->jqueryIncluded) {
+            if (($this->jqueryIncluded || $this->removeJquery) && !is_admin()) {
                 // Filter out jQuery libraries that are replaced with jQuery loaded from CDN
                 $scripts = array_filter($scripts, static function ($handle) {
-                    return is_admin() || !in_array($handle, ['jquery', 'jquery-core', 'jquery-migrate'], true);
+                    return !in_array($handle, ['jquery', 'jquery-core', 'jquery-migrate'], true);
                 });
             }
             return $scripts;
@@ -362,6 +363,18 @@ class ClientAssetsManager
     }
 
     /**
+     * Remove jQuery from frontend
+     *
+     * @param boolean $status
+     * @return $this
+     */
+    public function removeJquery($status = true)
+    {
+        $this->removeJquery = $status;
+        return $this;
+    }
+
+    /**
      * Add jQuery as external library from Google CDN
      *
      * @param string $version
@@ -370,7 +383,7 @@ class ClientAssetsManager
      */
     public function addJquery($version = '3.4.1', $minified = true)
     {
-        if ($this->jqueryIncluded || !$this->isEnabled()) {
+        if ($this->jqueryIncluded || !$this->isEnabled() || $this->removeJquery) {
             return $this;
         }
         $this->jqueryIncluded = true;
