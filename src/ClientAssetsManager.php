@@ -3,6 +3,7 @@
 namespace Flying\Wordpress;
 
 use _WP_Dependency;
+use JShrink\Minifier;
 use MatthiasMullie\PathConverter\Converter;
 use SplPriorityQueue;
 use ThomasLarsson\PriorityQueue\MinPriorityQueue;
@@ -207,13 +208,13 @@ class ClientAssetsManager
             }
             $cachePath = $this->cacheDir . '/' . sha1(implode('|', $hash)) . '.js';
             if (!is_file($cachePath)) {
-                // Combined script is not yet available - generate it and put into cache
-                $content = [];
+                // Combined script is not yet available - generate, minified it and put into cache
+                $content = '';
                 foreach ($parts as $part) {
-                    $content[] = '/* [' . basename($part) . '] */;';
-                    $content[] = file_get_contents($part);
+                    $content .= file_get_contents($part);
                 }
-                file_put_contents($cachePath, implode("\n", $content));
+                $minifiedJs = Minifier::minify($content, ['flaggedComments' => false]);
+                file_put_contents($cachePath, $minifiedJs);
             }
             // Return url of resulted combined script
             return str_replace($basePath, $wpScripts->base_url, $cachePath);
