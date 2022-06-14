@@ -1,4 +1,4 @@
-<?php
+<?php /** @noinspection PhpUnused */
 
 namespace Flying\Wordpress;
 
@@ -9,27 +9,22 @@ use ThomasLarsson\PriorityQueue\MinPriorityQueue;
 
 class ClientAssetsManager
 {
-    const DEFERRED_HEAD_CONTENTS_TAG = '<!-- Deferred HEAD client assets -->';
-    const DEFERRED_FOOTER_CONTENTS_TAG = '<!-- Deferred FOOTER client assets -->';
-    const COMBINED_SCRIPT_ID = 'client-assets-manager-combined-script';
-    /**
-     * @var ClientAssetsManager
-     */
-    private static $instance;
-    private $jqueryIncluded = false;
-    private $head;
-    private $footer;
-    private $styles;
-    private $scripts = [];
-    private $optimizeAssets = false;
-    private $assetsApplied = false;
-    private $renderScripts = [];
-    private $cacheDir;
+    private const DEFERRED_HEAD_CONTENTS_TAG = '<!-- Deferred HEAD client assets -->';
+    private const DEFERRED_FOOTER_CONTENTS_TAG = '<!-- Deferred FOOTER client assets -->';
+    private const COMBINED_SCRIPT_ID = 'client-assets-manager-combined-script';
 
-    /**
-     * @return ClientAssetsManager
-     */
-    public static function getInstance()
+    private static self $instance;
+    private bool $jqueryIncluded = false;
+    private MinPriorityQueue $head;
+    private MinPriorityQueue $footer;
+    private MinPriorityQueue $styles;
+    private array $scripts = [];
+    private bool $optimizeAssets = false;
+    private bool $assetsApplied = false;
+    private array $renderScripts = [];
+    private string $cacheDir;
+
+    public static function getInstance(): self
     {
         if (!self::$instance) {
             self::$instance = new self();
@@ -46,7 +41,7 @@ class ClientAssetsManager
         $this->init();
     }
 
-    private function init()
+    private function init(): void
     {
         if (!$this->isEnabled()) {
             return;
@@ -96,18 +91,15 @@ class ClientAssetsManager
             return $status;
         }, 10, 2);
 
-        // Capture output so we will be able to apply assets to it later
+        // Capture output, so we will be able to apply assets to it later
         // @see applyAssets()
         ob_start();
     }
 
     /**
      * Render collected client assets and apply them to given (or available in buffer) HTML
-     *
-     * @param string|null $html
-     * @return string
      */
-    public function applyAssets($html = null)
+    public function applyAssets(?string $html = null): string
     {
         if ($html === null && ob_get_level() > 0) {
             $html = ob_get_clean();
@@ -126,7 +118,7 @@ class ClientAssetsManager
         return $html;
     }
 
-    private function initJavaScriptOptimization()
+    private function initJavaScriptOptimization(): void
     {
         $filterOutJQuery = function ($scripts) {
             if ($this->jqueryIncluded) {
@@ -157,7 +149,7 @@ class ClientAssetsManager
                 }
                 /** @var _WP_Dependency $dependency */
                 $dependency = $wpScripts->registered[$script];
-                if (strpos($dependency->src, '://') !== false && strpos($dependency->src, $wpScripts->base_url . '/') === false) {
+                if (str_contains($dependency->src, '://') && !str_contains($dependency->src, $wpScripts->base_url . '/')) {
                     return true;
                 }
                 if (!in_array($script, $this->renderScripts, true)) {
@@ -181,7 +173,7 @@ class ClientAssetsManager
             $basePath = rtrim(str_replace('\\', '/', ABSPATH), '/');
             $hash = [];
             $parts = [];
-            // Collect information about scripts that should be include into combined script
+            // Collect information about scripts that should be included into combined script
             foreach ($this->renderScripts as $script) {
                 /** @var _WP_Dependency $dependency */
                 $dependency = $wpScripts->registered[$script];
@@ -189,9 +181,9 @@ class ClientAssetsManager
                 if ($path === false) {
                     continue;
                 }
-                if (strpos($path, '://') !== false) {
+                if (str_contains($path, '://')) {
                     $path = str_replace($wpScripts->base_url, $basePath, $path);
-                    if (strpos($path, '?') !== false) {
+                    if (str_contains($path, '?')) {
                         $path = explode('?', $path, 2)[0];
                     }
                 } else {
@@ -218,7 +210,7 @@ class ClientAssetsManager
             return str_replace($basePath, $wpScripts->base_url, $cachePath);
 
         }, 10, 2);
-        // Initialize script dependency for "all scripts" to let it to be rendered
+        // Initialize script dependency for "all scripts" to let it be rendered
         wp_scripts()->add(self::COMBINED_SCRIPT_ID, self::COMBINED_SCRIPT_ID . '.js');
         // Mark it with conditional comment so it will be possible to find it later
         wp_scripts()->add_data(self::COMBINED_SCRIPT_ID, 'conditional', self::COMBINED_SCRIPT_ID);
@@ -238,7 +230,12 @@ class ClientAssetsManager
             $html = ob_get_clean();
             // Move our combined script at the end of the scripts area to make sure that all additional scripts will stay above it
             /** @noinspection NotOptimalRegularExpressionsInspection */
-            $parts = preg_split('/' . preg_quote('<!--[if ' . self::COMBINED_SCRIPT_ID . ']>', '/') . '(.+?)' . preg_quote('<![endif]-->', '/') . '/s', $html, -1, PREG_SPLIT_DELIM_CAPTURE);
+            $parts = preg_split(
+                '/' . preg_quote('<!--[if ' . self::COMBINED_SCRIPT_ID . ']>', '/') . '(.+?)' . preg_quote('<![endif]-->', '/') . '/s',
+                $html,
+                -1,
+                PREG_SPLIT_DELIM_CAPTURE,
+            );
             $before = array_shift($parts);
             $script = array_shift($parts);
             $after = array_shift($parts);
@@ -248,14 +245,14 @@ class ClientAssetsManager
             // Render all additional scripts that may be attached to scripts
             // and need to appear after merged scripts
             foreach ($this->renderScripts as $script) {
-                $scripts->print_inline_script($script, 'after');
+                $scripts->print_inline_script($script);
             }
             /** @noinspection PhpParamsInspection */
             $this->footer->insert((string)ob_get_clean(), 5);
         }, 999);
     }
 
-    private function renderCombinedStylesheet()
+    private function renderCombinedStylesheet(): void
     {
         if (!$this->optimizeAssets) {
             return;
@@ -286,7 +283,7 @@ class ClientAssetsManager
             $content = [];
             foreach ($paths as $path) {
                 $pp = $path;
-                if (strpos($path, '://') === false) {
+                if (!str_contains($path, '://')) {
                     $pp = str_replace($basePath, '', $path);
                     if (!is_file($path)) {
                         $path = null;
@@ -323,10 +320,7 @@ class ClientAssetsManager
         }
     }
 
-    /**
-     * @return boolean
-     */
-    private function isAjax()
+    private function isAjax(): bool
     {
         return (array_key_exists('HTTP_X_REQUESTED_WITH', $_SERVER) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest')
             || (function_exists('wp_doing_ajax') && wp_doing_ajax());
@@ -334,10 +328,8 @@ class ClientAssetsManager
 
     /**
      * Determine if client assets manager is enabled
-     *
-     * @return bool
      */
-    private function isEnabled()
+    private function isEnabled(): bool
     {
         return !(
             (PHP_SAPI === 'cli')
@@ -347,15 +339,12 @@ class ClientAssetsManager
         );
     }
 
-    /**
-     * @param boolean $status
-     * @return $this
-     */
-    public function setOptimizeAssets($status)
+    public function setOptimizeAssets(bool $status): self
     {
-        $this->optimizeAssets = (bool)$status;
+        $this->optimizeAssets = $status;
         if ($this->optimizeAssets && !@mkdir($this->cacheDir) && !is_dir($this->cacheDir)) {
-            trigger_error('Client Assets Manager: Assets optimization is disabled because cache directory is missed and can\'t be created', E_USER_WARNING);
+            trigger_error('Client Assets Manager: Assets optimization is disabled because cache directory is missed and can\'t be created',
+                E_USER_WARNING);
             $this->optimizeAssets = false;
         }
         return $this;
@@ -363,50 +352,41 @@ class ClientAssetsManager
 
     /**
      * Add jQuery as external library from Google CDN
-     *
-     * @param string $version
-     * @param boolean $minified
-     * @return $this
      */
-    public function addJquery($version = '3.4.1', $minified = true)
+    public function addJquery(string $version = '3.4.1', bool $minified = true): self
     {
         if ($this->jqueryIncluded || !$this->isEnabled()) {
             return $this;
         }
         $this->jqueryIncluded = true;
-        $this->addCode('<script type="text/javascript" src="' . sprintf('https://ajax.googleapis.com/ajax/libs/jquery/%s/jquery%s.js', $version, ($minified ? '.min' : '')) . '"></script>', true, 9999);
+        $url = sprintf('https://ajax.googleapis.com/ajax/libs/jquery/%s/jquery%s.js', $version, ($minified ? '.min' : ''));
+        $this->addCode('<script type="text/javascript" src="' . $url . '"></script>', true, 9999);
         // Based on code from https://gist.github.com/brunoais/4690937#file-loadingjqueryasync-original-html
-        $this->addJs('(function(w,d,u){w.readyQ=[];w.bindReadyQ=[];function p(x,y){if(x=="ready"){w.bindReadyQ.push(y);}else{w.readyQ.push(x);}};var a={ready:p,bind:p};w.$=w.jQuery=function(f){if(f===d||f===u){return a}else{p(f)}}})(window,document)', false);
+        $this->addJs('(function(w,d,u){w.readyQ=[];w.bindReadyQ=[];function p(x,y){if(x=="ready"){w.bindReadyQ.push(y);}else' .
+            '{w.readyQ.push(x);}};var a={ready:p,bind:p};w.$=w.jQuery=function(f){if(f===d||f===u){return a}else{p(f)}}})(window,document)',
+            false
+        );
         $this->addJs('(function($,d){$.each(readyQ,function(i,f){$(f)});$.each(bindReadyQ,function(i,f){$(d).bind("ready",f)})})(jQuery,document)');
         return $this;
     }
 
     /**
      * Determine if script with given handle is already available in collected assets
-     *
-     * @param string $handle
-     * @return boolean
      */
-    public function haveScript($handle)
+    public function haveScript(string $handle): bool
     {
         return array_key_exists($handle, $this->scripts);
     }
 
     /**
      * Add given script into list of assets
-     *
-     * @param string $handle
-     * @param string $url
-     * @param array $deps
-     * @param string $version
-     * @return $this
      */
-    public function addScript($handle, $url, array $deps = [], $version = null)
+    public function addScript(string $handle, string $url, array $deps = [], ?string $version = null): self
     {
         if ($this->isAjax()) {
             return $this;
         }
-        if (strpos($url, '//') === false) {
+        if (!str_contains($url, '//')) {
             $url = get_template_directory_uri() . '/' . ltrim($url, '/');
         }
         $this->scripts[$handle] = [$handle, $url, $deps, $version];
@@ -415,13 +395,8 @@ class ClientAssetsManager
 
     /**
      * Add plain JavaScript code into list of assets
-     *
-     * @param string $code
-     * @param boolean $inFooter
-     * @param int $priority
-     * @return $this
      */
-    public function addJs($code, $inFooter = true, $priority = 100)
+    public function addJs(string $code, bool $inFooter = true, int $priority = 100): self
     {
         $this->addCode('<script type="text/javascript">' . $code . '</script>', $inFooter, $priority);
         return $this;
@@ -435,7 +410,7 @@ class ClientAssetsManager
      * @return $this
      * @noinspection PhpComposerExtensionStubsInspection
      */
-    public function addFont($font, $subset = null)
+    public function addFont($font, $subset = null): self
     {
         if ($this->isAjax()) {
             return $this;
@@ -444,7 +419,6 @@ class ClientAssetsManager
         if (is_array($font)) {
             $query = [];
             $family = [];
-            /** @var array $font */
             foreach ($font as $ff => $fw) {
                 $family[] = $ff . ':' . (is_array($fw) ? implode(',', $fw) : $fw);
             }
@@ -458,7 +432,7 @@ class ClientAssetsManager
         if ($this->optimizeAssets) {
             $hash = sha1($url);
             $cachePath = $this->cacheDir . '/font-' . $hash . '.css';
-            if (!is_file($cachePath) || filemtime($cachePath) < strtotime('last sunday')) {
+            if (!is_file($cachePath) || (int)filemtime($cachePath) < strtotime('last sunday')) {
                 if (function_exists('curl_init')) {
                     $ch = curl_init();
                     $fp = fopen($cachePath, 'wb');
@@ -491,26 +465,22 @@ class ClientAssetsManager
     }
 
     /**
-     * @param string $url
-     * @param boolean $inline
-     * @param int $priority
-     * @return $this
+     * Add stylesheet by url
      */
-    public function addStylesheet($url, $inline = false, $priority = 100)
+    public function addStylesheet(string $url, bool $inline = false, int $priority = 100): self
     {
         if ($this->isAjax()) {
             return $this;
         }
         if ($this->optimizeAssets && !$inline) {
-            $path = null;
             $external = false;
             $basePath = rtrim(str_replace('\\', '/', ABSPATH), '/');
-            if (strpos($url, '://') !== false) {
+            if (str_contains($url, '://')) {
                 // This is URL
-                if (strpos($url, wp_styles()->base_url . '/') !== false) {
+                if (str_contains($url, wp_styles()->base_url . '/')) {
                     // This is local url
                     $path = str_replace(wp_styles()->base_url, $basePath, $url);
-                    if (strpos($path, '?') !== false) {
+                    if (str_contains($path, '?')) {
                         $path = explode('?', $path, 2)[0];
                     }
                     $path = str_replace('\\', '/', $path);
@@ -531,7 +501,7 @@ class ClientAssetsManager
                 'priority' => $priority,
             ], $priority);
         } else {
-            if ((!$inline) && (strpos($url, '//') === false)) {
+            if ((!$inline) && (!str_contains($url, '//'))) {
                 $url = get_template_directory_uri() . '/' . ltrim($url, '/');
             }
             if ($inline) {
@@ -540,7 +510,7 @@ class ClientAssetsManager
                 if (is_file($path)) {
                     $css = file_get_contents($path);
                     $css = preg_replace('/\s+/', ' ', $css);
-                    $html = '<style type="text/css">' . trim($css) . '</style>';
+                    $html = '<style>' . trim($css) . '</style>';
                 } else {
                     $html = '';
                     trigger_error('Client Assets Manager: Unavailable path is given to inline style: ' . $url, E_USER_WARNING);
@@ -555,23 +525,14 @@ class ClientAssetsManager
 
     /**
      * Add plain CSS styles into list of assets
-     *
-     * @param string $code
-     * @param int $priority
-     * @return $this
      */
-    public function addCSS($code, $priority = 100)
+    public function addCSS(string $code, int $priority = 100): self
     {
-        $this->addCode('<style type="text/css">' . $code . '</style>', false, $priority);
+        $this->addCode('<style>' . $code . '</style>', false, $priority);
         return $this;
     }
 
-    /**
-     * @param string $html
-     * @param boolean $inFooter
-     * @param int $priority
-     */
-    private function addCode($html, $inFooter = true, $priority = 100)
+    private function addCode(string $html, bool $inFooter = true, int $priority = 100): void
     {
         if ($inFooter) {
             /** @noinspection PhpParamsInspection */
@@ -582,16 +543,8 @@ class ClientAssetsManager
         }
     }
 
-    /**
-     * @param SplPriorityQueue $queue
-     * @return string
-     */
-    private function merge(SplPriorityQueue $queue)
+    private function merge(SplPriorityQueue $queue): string
     {
-        $result = [];
-        foreach ($queue as $item) {
-            $result[] = $item;
-        }
-        return implode("\n", $result);
+        return implode("\n", iterator_to_array($queue, false));
     }
 }
