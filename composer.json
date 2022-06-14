@@ -24,5 +24,10 @@
     },
     "suggest": {
         "ext-curl": "Allows better handling of Google Fonts stylesheets inclusion"
+    },
+    "config": {
+        "allow-plugins": {
+            "roots/wordpress-core-installer": false
+        }
     }
 }
