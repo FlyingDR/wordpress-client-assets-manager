@@ -112,7 +112,7 @@ class ClientAssetsManager
         if ($html === null && ob_get_level() > 0) {
             $html = ob_get_clean();
         }
-        if (!$this->isEnabled()) {
+        if ($this->assetsApplied || !$this->isEnabled()) {
             return $html;
         }
         $this->renderCombinedStylesheet();
