@@ -353,7 +353,7 @@ class ClientAssetsManager
     /**
      * Add jQuery as external library from Google CDN
      */
-    public function addJquery(string $version = '3.4.1', bool $minified = true): self
+    public function addJquery(string $version = '3.6.0', bool $minified = true): self
     {
         if ($this->jqueryIncluded || !$this->isEnabled()) {
             return $this;
