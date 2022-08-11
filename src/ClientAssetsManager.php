@@ -24,20 +24,20 @@ class ClientAssetsManager
     private array $renderScripts = [];
     private string $cacheDir;
 
-    public static function getInstance(): self
+    public static function getInstance(?string $cacheDir = null): self
     {
         if (!self::$instance) {
-            self::$instance = new self();
+            self::$instance = new self($cacheDir);
         }
         return self::$instance;
     }
 
-    protected function __construct()
+    protected function __construct(?string $cacheDir = null)
     {
         $this->head = new MinPriorityQueue();
         $this->footer = new MinPriorityQueue();
         $this->styles = new MinPriorityQueue();
-        $this->cacheDir = str_replace('\\', '/', WP_CONTENT_DIR) . '/assets-cache';
+        $this->cacheDir = $cacheDir ?? (str_replace('\\', '/', WP_CONTENT_DIR) . '/assets-cache');
         $this->init();
     }
 
