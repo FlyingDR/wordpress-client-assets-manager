@@ -212,7 +212,7 @@ class ClientAssetsManager
         }, 10, 2);
         // Initialize script dependency for "all scripts" to let it be rendered
         wp_scripts()->add(self::COMBINED_SCRIPT_ID, self::COMBINED_SCRIPT_ID . '.js');
-        // Mark it with conditional comment so it will be possible to find it later
+        // Mark it with conditional comment, so it will be possible to find it later
         wp_scripts()->add_data(self::COMBINED_SCRIPT_ID, 'conditional', self::COMBINED_SCRIPT_ID);
         // Print additional scripts, registered for optimized versions of the scripts
         add_action('wp_footer', static function () {
@@ -436,7 +436,8 @@ class ClientAssetsManager
                 if (function_exists('curl_init')) {
                     $ch = curl_init();
                     $fp = fopen($cachePath, 'wb');
-                    // We should expose ourselves as MSIE 11 to be able to get fonts into WOFF format because it is format with widest adoption
+                    // We should expose ourselves as MSIE 11 to be able to get fonts
+                    // into WOFF format because it is the format with the widest adoption
                     curl_setopt_array($ch, array(
                         CURLOPT_URL        => $url,
                         CURLOPT_FILE       => $fp,
