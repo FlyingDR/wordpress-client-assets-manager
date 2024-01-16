@@ -3,9 +3,8 @@
 namespace Flying\Wordpress;
 
 use _WP_Dependency;
+use Flying\Wordpress\Queue\AssetQueue;
 use MatthiasMullie\PathConverter\Converter;
-use SplPriorityQueue;
-use ThomasLarsson\PriorityQueue\MinPriorityQueue;
 
 class ClientAssetsManager
 {
@@ -15,9 +14,9 @@ class ClientAssetsManager
 
     private static self $instance;
     private bool $jqueryIncluded = false;
-    private MinPriorityQueue $head;
-    private MinPriorityQueue $footer;
-    private MinPriorityQueue $styles;
+    private AssetQueue $head;
+    private AssetQueue $footer;
+    private AssetQueue $styles;
     private array $scripts = [];
     private bool $optimizeAssets = false;
     private bool $assetsApplied = false;
@@ -34,9 +33,9 @@ class ClientAssetsManager
 
     protected function __construct(?string $cacheDir = null)
     {
-        $this->head = new MinPriorityQueue();
-        $this->footer = new MinPriorityQueue();
-        $this->styles = new MinPriorityQueue();
+        $this->head = new AssetQueue();
+        $this->footer = new AssetQueue();
+        $this->styles = new AssetQueue();
         $this->cacheDir = $cacheDir ?? (str_replace('\\', '/', WP_CONTENT_DIR) . '/assets-cache');
         $this->init();
     }
@@ -239,7 +238,6 @@ class ClientAssetsManager
             $before = array_shift($parts);
             $script = array_shift($parts);
             $after = array_shift($parts);
-            /** @noinspection PhpParamsInspection */
             $this->footer->insert(implode("\n", [$before, $after, $script]), 10);
             ob_start();
             // Render all additional scripts that may be attached to scripts
@@ -247,7 +245,6 @@ class ClientAssetsManager
             foreach ($this->renderScripts as $script) {
                 $scripts->print_inline_script($script);
             }
-            /** @noinspection PhpParamsInspection */
             $this->footer->insert((string)ob_get_clean(), 5);
         }, 999);
     }
@@ -260,7 +257,7 @@ class ClientAssetsManager
         // Generate URL of combined stylesheets from all collected CSS files
         $paths = [];
         $hash = [];
-        $stylesheets = new MinPriorityQueue();
+        $stylesheets = new AssetQueue();
         foreach ($this->styles as $item) {
             if ($item['external']) {
                 // This is external stylesheet, we need to keep it as it is
@@ -309,13 +306,11 @@ class ClientAssetsManager
             file_put_contents($cachePath, implode("\n", $content));
         }
         // Include resulted combined stylesheet into list of stylesheets
-        /** @noinspection PhpParamsInspection */
         $stylesheets->insert([
             'url'      => str_replace($basePath, wp_styles()->base_url . '/', $cachePath),
             'priority' => 1,
         ], 1);
         foreach ($stylesheets as $item) {
-            /** @noinspection PhpParamsInspection */
             $this->head->insert('<link rel="stylesheet" type="text/css" href="' . $item['url'] . '">', $item['priority']);
         }
     }
@@ -453,7 +448,6 @@ class ClientAssetsManager
                     file_put_contents($cachePath, $css);
                 }
             }
-            /** @noinspection PhpParamsInspection */
             $this->styles->insert([
                 'external' => false,
                 'url'      => $cachePath,
@@ -495,7 +489,6 @@ class ClientAssetsManager
                 $path = str_replace('\\', '/', $url);
                 $path = str_replace('\\', '/', rtrim(get_template_directory(), '/') . '/' . ltrim($path, '/'));
             }
-            /** @noinspection PhpParamsInspection */
             $this->styles->insert([
                 'external' => $external,
                 'url'      => $path,
@@ -536,15 +529,13 @@ class ClientAssetsManager
     private function addCode(string $html, bool $inFooter = true, int $priority = 100): void
     {
         if ($inFooter) {
-            /** @noinspection PhpParamsInspection */
             $this->footer->insert($html, $priority);
         } else {
-            /** @noinspection PhpParamsInspection */
             $this->head->insert($html, $priority);
         }
     }
 
-    private function merge(SplPriorityQueue $queue): string
+    private function merge(\SplPriorityQueue $queue): string
     {
         return implode("\n", iterator_to_array($queue, false));
     }
