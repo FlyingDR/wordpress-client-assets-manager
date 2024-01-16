@@ -59,7 +59,7 @@ class ClientAssetsManager
 
         // Render HEAD assets
         add_action('wp_head', function () {
-            // Mark a place to put assets into HEAD section of the page
+            // Mark a place to put assets into the HEAD section of the page
             echo self::DEFERRED_HEAD_CONTENTS_TAG;
             $this->initJavaScriptOptimization();
         }, PHP_INT_MIN);
@@ -83,7 +83,7 @@ class ClientAssetsManager
         });
 
         add_filter('wp_redirect_status', function ($status, $location) {
-            // We're in process of redirect, we have to disable manager in this case
+            // We're in the process of redirect, we have to disable manager in this case
             if ($location) {
                 $this->assetsApplied = true;
             }
@@ -107,7 +107,7 @@ class ClientAssetsManager
             return $html;
         }
         $this->renderCombinedStylesheet();
-        // By this time page is completely rendered, but we still need to put assets referenced into previously marked places
+        // By this time the page is completely rendered, but we still need to put assets referenced into previously marked places
         $html = str_replace(
             [self::DEFERRED_HEAD_CONTENTS_TAG, self::DEFERRED_FOOTER_CONTENTS_TAG],
             [$this->merge($this->head), $this->merge($this->footer)],
@@ -139,7 +139,7 @@ class ClientAssetsManager
             $wpScripts = wp_scripts();
             $scripts = array_filter($scripts, function ($script) use ($wpScripts) {
                 // We should replace all references to scripts that are loaded from local urls
-                // with combined script that will be rendered at later stage of page generation
+                // with the combined script that will be rendered at later stage of page generation
                 if ($script === self::COMBINED_SCRIPT_ID) {
                     return true;
                 }
@@ -165,14 +165,14 @@ class ClientAssetsManager
         // Render proper script source code
         add_filter('script_loader_src', function ($src, $handle) {
             if ($handle !== self::COMBINED_SCRIPT_ID) {
-                // This is not a reference to combined script, so leave it as it is
+                // This is not a reference to the combined script, so leave it as it is
                 return $src;
             }
             $wpScripts = wp_scripts();
             $basePath = rtrim(str_replace('\\', '/', ABSPATH), '/');
             $hash = [];
             $parts = [];
-            // Collect information about scripts that should be included into combined script
+            // Collect information about scripts that should be included in the combined script
             foreach ($this->renderScripts as $script) {
                 /** @var _WP_Dependency $dependency */
                 $dependency = $wpScripts->registered[$script];
@@ -205,7 +205,7 @@ class ClientAssetsManager
                 }
                 file_put_contents($cachePath, implode("\n", $content));
             }
-            // Return url of resulted combined script
+            // Return url of the resulted combined script
             return str_replace($basePath, $wpScripts->base_url, $cachePath);
 
         }, 10, 2);
@@ -227,7 +227,7 @@ class ClientAssetsManager
                 $scripts->print_extra_script($script);
             }
             $html = ob_get_clean();
-            // Move our combined script at the end of the scripts area to make sure that all additional scripts will stay above it
+            // Move our combined script at the end of the script area to make sure that all additional scripts will stay above it
             /** @noinspection NotOptimalRegularExpressionsInspection */
             $parts = preg_split(
                 '/' . preg_quote('<!--[if ' . self::COMBINED_SCRIPT_ID . ']>', '/') . '(.+?)' . preg_quote('<![endif]-->', '/') . '/s',
@@ -260,7 +260,7 @@ class ClientAssetsManager
         $stylesheets = new AssetQueue();
         foreach ($this->styles as $item) {
             if ($item['external']) {
-                // This is external stylesheet, we need to keep it as it is
+                // This is an external stylesheet, we need to keep it as it is
                 $stylesheets->insert($item, $item['priority']);
             } else {
                 // This is local stylesheet, it should be merged
@@ -305,7 +305,7 @@ class ClientAssetsManager
             }
             file_put_contents($cachePath, implode("\n", $content));
         }
-        // Include resulted combined stylesheet into list of stylesheets
+        // Include resulted combined stylesheet in the list of stylesheets
         $stylesheets->insert([
             'url'      => str_replace($basePath, wp_styles()->base_url . '/', $cachePath),
             'priority' => 1,
@@ -346,7 +346,7 @@ class ClientAssetsManager
     }
 
     /**
-     * Add jQuery as external library from Google CDN
+     * Add jQuery as an external library from Google CDN
      */
     public function addJquery(string $version = '3.6.0', bool $minified = true): self
     {
@@ -366,7 +366,7 @@ class ClientAssetsManager
     }
 
     /**
-     * Determine if script with given handle is already available in collected assets
+     * Determine if the script with the given handle is already available in collected assets
      */
     public function haveScript(string $handle): bool
     {
@@ -374,7 +374,7 @@ class ClientAssetsManager
     }
 
     /**
-     * Add given script into list of assets
+     * Add a given script into the list of assets
      */
     public function addScript(string $handle, string $url, array $deps = [], ?string $version = null): self
     {
@@ -389,7 +389,7 @@ class ClientAssetsManager
     }
 
     /**
-     * Add plain JavaScript code into list of assets
+     * Add plain JavaScript code into the list of assets
      */
     public function addJs(string $code, bool $inFooter = true, int $priority = 100): self
     {
@@ -473,19 +473,19 @@ class ClientAssetsManager
             if (str_contains($url, '://')) {
                 // This is URL
                 if (str_contains($url, wp_styles()->base_url . '/')) {
-                    // This is local url
+                    // This is a local url
                     $path = str_replace(wp_styles()->base_url, $basePath, $url);
                     if (str_contains($path, '?')) {
                         $path = explode('?', $path, 2)[0];
                     }
                     $path = str_replace('\\', '/', $path);
                 } else {
-                    // This is external url
+                    // This is an external url
                     $path = $url;
                     $external = true;
                 }
             } else {
-                // This is path
+                // This is a path
                 $path = str_replace('\\', '/', $url);
                 $path = str_replace('\\', '/', rtrim(get_template_directory(), '/') . '/' . ltrim($path, '/'));
             }
@@ -518,7 +518,7 @@ class ClientAssetsManager
     }
 
     /**
-     * Add plain CSS styles into list of assets
+     * Add plain CSS styles into the list of assets
      */
     public function addCSS(string $code, int $priority = 100): self
     {
