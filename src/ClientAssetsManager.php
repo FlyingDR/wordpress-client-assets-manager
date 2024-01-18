@@ -337,7 +337,7 @@ class ClientAssetsManager
     public function setOptimizeAssets(bool $status): self
     {
         $this->optimizeAssets = $status;
-        if ($this->optimizeAssets && !@mkdir($this->cacheDir) && !is_dir($this->cacheDir)) {
+        if ($this->optimizeAssets && !is_dir($this->cacheDir) && !@mkdir($this->cacheDir, 0777, true) && !is_dir($this->cacheDir)) {
             trigger_error('Client Assets Manager: Assets optimization is disabled because cache directory is missed and can\'t be created',
                 E_USER_WARNING);
             $this->optimizeAssets = false;
