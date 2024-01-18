@@ -4,7 +4,7 @@ namespace Flying\Wordpress;
 
 use _WP_Dependency;
 use Flying\Wordpress\Queue\AssetQueue;
-use MatthiasMullie\PathConverter\Converter;
+use Symfony\Component\Filesystem\Path;
 
 class ClientAssetsManager
 {
@@ -290,11 +290,11 @@ class ClientAssetsManager
                 $content[] = '/* [' . basename($pp) . '] */';
                 if ($path) {
                     $css = file_get_contents($path);
-                    $converter = new Converter($path, $cachePath);
-                    $css = preg_replace_callback('/url\(([\'\"]?)(.+?)(\1)\)/is', static function ($data) use ($converter) {
+                    $base = Path::makeRelative(dirname($path), dirname($cachePath));
+                    $css = preg_replace_callback('/url\(([\'\"]?)(.+?)(\1)\)/is', static function ($data) use ($base) {
                         $url = $data[2];
                         if (!preg_match('/^(data|https?):/i', $url)) {
-                            $url = $converter->convert($url);
+                            $url = Path::join($base, $url);
                         }
                         return sprintf('url(%s%s%s)', $data[1], $url, $data[3]);
                     }, $css);

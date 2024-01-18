@@ -16,8 +16,8 @@
     },
     "require": {
         "php": "^7.4|^8.0",
-        "matthiasmullie/path-converter": "^1.1",
-        "symfony/polyfill-php80": "^1.26"
+        "symfony/polyfill-php80": "^1.26",
+        "symfony/filesystem": "^5.4"
     },
     "require-dev": {
         "roots/wordpress": "^5.0|^6.0"
