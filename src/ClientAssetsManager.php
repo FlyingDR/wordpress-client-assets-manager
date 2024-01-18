@@ -207,7 +207,8 @@ class ClientAssetsManager
 
         }, 10, 2);
         // Initialize script dependency for "all scripts" to let it be rendered
-        wp_scripts()->add(self::COMBINED_SCRIPT_ID, self::COMBINED_SCRIPT_ID . '.js');
+        // Script src should be absolute to make sure that correct url will be constructed
+        wp_scripts()->add(self::COMBINED_SCRIPT_ID, sprintf('/%s.js', self::COMBINED_SCRIPT_ID));
         // Mark it with conditional comment, so it will be possible to find it later
         wp_scripts()->add_data(self::COMBINED_SCRIPT_ID, 'conditional', self::COMBINED_SCRIPT_ID);
         // Print additional scripts, registered for optimized versions of the scripts
