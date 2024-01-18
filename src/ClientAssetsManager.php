@@ -25,10 +25,7 @@ class ClientAssetsManager
 
     public static function getInstance(?string $cacheDir = null): self
     {
-        if (!self::$instance) {
-            self::$instance = new self($cacheDir);
-        }
-        return self::$instance;
+        return self::$instance ??= new self($cacheDir);
     }
 
     protected function __construct(?string $cacheDir = null)
