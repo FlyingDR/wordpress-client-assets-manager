@@ -216,12 +216,22 @@ class ClientAssetsManager
             ob_start();
         }, 1);
         add_action('wp_footer', function () {
-            $scripts = wp_scripts();
+            if (version_compare($GLOBALS['wp_version'], '6.3.0', '>=')) {
+                $inlineScriptRenderer = static function (string $script, string $position = 'after'): void {
+                    echo wp_scripts()->get_inline_script_tag($script, $position);
+                };
+            } else {
+                $inlineScriptRenderer = static function (string $script, string $position = 'after'): void {
+                    /** @noinspection PhpDeprecationInspection */
+                    wp_scripts()->print_inline_script($script, $position);
+                };
+            }
             // Render all additional scripts that may be attached to scripts
             // and need to appear before merged scripts
             foreach ($this->renderScripts as $script) {
-                $scripts->print_inline_script($script, 'before');
-                $scripts->print_extra_script($script);
+                $inlineScriptRenderer($script, 'before');
+                /** @noinspection UnusedFunctionResultInspection */
+                wp_scripts()->print_extra_script($script);
             }
             $html = ob_get_clean();
             // Move our combined script at the end of the script area to make sure that all additional scripts will stay above it
@@ -240,7 +250,7 @@ class ClientAssetsManager
             // Render all additional scripts that may be attached to scripts
             // and need to appear after merged scripts
             foreach ($this->renderScripts as $script) {
-                $scripts->print_inline_script($script);
+                $inlineScriptRenderer($script);
             }
             $this->footer->insert((string)ob_get_clean(), 5);
         }, 999);
