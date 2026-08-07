@@ -390,7 +390,15 @@ class ClientAssetsManager
             return $this;
         }
         if (!str_contains($url, '//')) {
+            $localPath = rtrim(get_template_directory(), '/') . '/' . ltrim($url, '/');
             $url = get_template_directory_uri() . '/' . ltrim($url, '/');
+
+            // AUTOVERSION:
+            // If the version is not explicitly passed and the file exists,
+            // we take the timestamp of its latest modification
+            if ($version === null && is_file($localPath)) {
+                $version = (string) filemtime($localPath);
+            }
         }
         $this->scripts[$handle] = [$handle, $url, $deps, $version];
         return $this;
@@ -504,7 +512,14 @@ class ClientAssetsManager
             ], $priority);
         } else {
             if ((!$inline) && (!str_contains($url, '//'))) {
+                $localPath = rtrim(get_template_directory(), '/') . '/' . ltrim($url, '/');
                 $url = get_template_directory_uri() . '/' . ltrim($url, '/');
+
+                // AUTOVERSION:
+                // Adding the version to the URL based on the modification time of the file
+                if (is_file($localPath)) {
+                    $url .= '?ver=' . filemtime($localPath);
+                }
             }
             if ($inline) {
                 $path = str_replace('\\', '/', $url);
