@@ -11,7 +11,7 @@ class AssetQueue extends \SplPriorityQueue
     #[\ReturnTypeWillChange]
     public function insert($value, $priority): bool
     {
-        return parent::insert($value, [get_class($this), $priority, $this->insertOrder++]);
+        return parent::insert($value, [static::class, $priority, $this->insertOrder++]);
     }
 
     public function compare($priority1, $priority2): int
@@ -28,7 +28,7 @@ class AssetQueue extends \SplPriorityQueue
 
     private function isValidPriority($priority): bool
     {
-        return is_array($priority) && count($priority) === 3 && $priority[0] === get_class($this);
+        return is_array($priority) && count($priority) === 3 && $priority[0] === static::class;
     }
 }
 
