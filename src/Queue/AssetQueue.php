@@ -8,6 +8,7 @@ class AssetQueue extends \SplPriorityQueue
 {
     private int $insertOrder = 0;
 
+    #[\ReturnTypeWillChange]
     public function insert($value, $priority): bool
     {
         return parent::insert($value, [get_class($this), $priority, $this->insertOrder++]);
